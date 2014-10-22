@@ -1,0 +1,24 @@
+sudo apt-get install sqlite3 libsqlite3-dev sqlitebrowser sqlite3-doc
+
+sqlitebrowser test.db
+
+sqlite3 test.db "SELECT * FROM data;"
+
+sqlite3 test.db "SELECT id FROM data WHERE topic='rum1';"
+sqlite3 test.db "SELECT id FROM data WHERE topic LIKE 'rum%';"
+
+
+
+sqlite3 test.db "INSERT INTO data (topic, time) VALUES ('rum1', "$(date +%s)");"
+sqlite3 test.db "UPDATE data SET time="$(date +%s)" WHERE id=1;"
+
+#----
+cj@frog:~/funtech/MosqSanityCheck$ sqlite3 test.db "SELECT * FROM data;"
+1|rum1|1413736572
+2|rum2|1413736531
+cj@frog:~/funtech/MosqSanityCheck$ sqlite3 test.db "SELECT * FROM data WHERE time > 1413736532;"
+1|rum1|1413736572
+#----
+
+now-Xs=past
+
