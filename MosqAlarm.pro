@@ -10,7 +10,7 @@ target.path = /usr/local/bin/
 INSTALLS += target
 
 # Input
-SOURCES += src/main.cpp
-SOURCES += src/UnixTime.cpp
-SOURCES += src/SQLiteWrapper.cpp
-SOURCES += src/MosqConnect.cpp
+SOURCES += main.cpp
+SOURCES += UnixTime.cpp
+SOURCES += SQLiteWrapper.cpp
+SOURCES += MosqConnect.cpp
