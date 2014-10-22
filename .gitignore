@@ -9,3 +9,7 @@ Makefile
 tags
 cscope.files
 cscope.out
+
+# Project files
+MosqAlarm
+test.db
