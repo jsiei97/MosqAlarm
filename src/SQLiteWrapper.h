@@ -1,4 +1,5 @@
-
+#ifndef  __SQLITEWRAPPER_H
+#define  __SQLITEWRAPPER_H
 
 #include <QSqlDatabase>
 
@@ -19,3 +20,5 @@ class SQLiteWrapper
         void updateTimestamp(QString topic);
 
 };
+
+#endif  // __SQLITEWRAPPER_H 

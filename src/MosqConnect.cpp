@@ -33,14 +33,18 @@
 #include <mosquittopp.h>
 
 #include "MosqConnect.h"
+#include "SQLiteWrapper.h"
+#include "UnixTime.h"
 
 
-MosqConnect::MosqConnect(const char *id, const char *host, int port) : mosquittopp(id)
+MosqConnect::MosqConnect(const char *id, const char *host, int port, SQLiteWrapper *db) : mosquittopp(id)
 {
     int keepalive = 60;
 
     // Connect immediately.
     connect(host, port, keepalive);
+
+    dblite=db;
 };
 
 void MosqConnect::on_connect(int rc)
@@ -77,9 +81,13 @@ void MosqConnect::on_message(const struct mosquitto_message *message)
 
     QString topic = QString(message->topic);
 
-    qDebug() << "New message:" << (QDateTime::currentDateTime()).toString("hh:mm:ss") << topic << mess;
+    qDebug() << "New message:" 
+        << topic 
+        << mess
+        << (QDateTime::currentDateTime()).toString("hh:mm:ss") 
+        << UnixTime::get();
 
-    /// @todo Send to SQLite
+    dblite->updateTimestamp(topic);
 
 }
 

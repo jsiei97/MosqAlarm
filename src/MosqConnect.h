@@ -25,13 +25,15 @@
 #define  __MOSQCONNECT_H
 
 #include <mosquittopp.h>
+#include "SQLiteWrapper.h"
 
 class MosqConnect : public mosqpp::mosquittopp
 {
     private:
+        SQLiteWrapper *dblite;
 
 	public:
-		MosqConnect(const char *id, const char *host, int port);
+		MosqConnect(const char *id, const char *host, int port, SQLiteWrapper *db);
 		~MosqConnect();
 
 		void on_connect(int rc);

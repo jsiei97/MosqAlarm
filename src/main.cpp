@@ -8,33 +8,25 @@ int main()
     qDebug() << "Qt SQLite test app";
     SQLiteWrapper lite;
 
-    qDebug() << "id rum1:" << lite.getId("rum1");
-    qDebug() << "id rum2:" << lite.getId("rum2");
+    class MosqConnect *mqtt;
+    int rc;
 
-    lite.updateTimestamp("rum1");
-    lite.updateTimestamp("rum2");
+    mosqpp::lib_init();
 
-    qDebug() << "id rum1:" << lite.getId("rum1");
-    qDebug() << "id rum2:" << lite.getId("rum2");
+    mqtt = new MosqConnect(
+            "MosqAlarm",
+            "mosqhub",
+            1883,
+            &lite
+            );
 
-       class MosqConnect *mqtt;
-        int rc;
-
-        mosqpp::lib_init();
-
-        mqtt = new MosqConnect(
-                "MosqAlarm",
-                "mosqhub",
-                1883
-                );
-
-        while(1)
+    while(1)
+    {
+        rc = mqtt->loop();
+        if(rc)
         {
-            rc = mqtt->loop();
-            if(rc)
-            {
-                mqtt->reconnect();
-            }
+            mqtt->reconnect();
         }
-        mosqpp::lib_cleanup();
+    }
+    mosqpp::lib_cleanup();
 }

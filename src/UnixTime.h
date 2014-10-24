@@ -21,6 +21,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef  __UNIXTIME_H
+#define  __UNIXTIME_H
+
 #include <QString>
 
 /**
@@ -32,3 +35,5 @@ class UnixTime
         static unsigned int get();
         static QString toQString();
 };
+
+#endif  // __UNIXTIME_H 

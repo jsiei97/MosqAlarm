@@ -26,7 +26,7 @@ void SQLiteWrapper::close()
 
 SQLiteWrapper::SQLiteWrapper()
 {
-    qDebug() << "Qt SQLite test app";
+    //qDebug() << "Qt SQLite test app";
     filename = "test.db";
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(filename);
@@ -70,7 +70,7 @@ QString SQLiteWrapper::getId(QString topic)
     QSqlQuery q(str);
     QSqlRecord rec = q.record();
 
-    qDebug() << "Number of columns: " << rec.count();
+    //qDebug() << "Number of columns: " << rec.count();
 
     int nameCol = rec.indexOf("id"); // index of the field "name"
     //if size==1 ...
@@ -82,7 +82,7 @@ QString SQLiteWrapper::getId(QString topic)
             break;
         }
 
-        qDebug() << q.value(nameCol).toString(); // output all names
+        //qDebug() << q.value(nameCol).toString(); // output all names
     }
 
     close();
@@ -102,7 +102,7 @@ QString SQLiteWrapper::getId(QString topic)
 
 void SQLiteWrapper::updateTimestamp(QString topic)
 {
-    qDebug() << UnixTime::get();
+    //qDebug() << UnixTime::get();
 
     //"select id from data where topic='rum1';"
     QString id = getId(topic);
@@ -116,6 +116,7 @@ void SQLiteWrapper::updateTimestamp(QString topic)
         str.append("', '");
         str.append(UnixTime::toQString());
         str.append("')");
+        qDebug() << str;
 
         QSqlQuery query;
         if( !query.exec(str) )
