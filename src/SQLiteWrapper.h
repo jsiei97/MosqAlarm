@@ -20,7 +20,7 @@ class SQLiteWrapper
 
         QString getId(QString topic);
         void updateTimestamp(QString topic);
-
+        QStringList getOldTopics();
 };
 
 #endif  // __SQLITEWRAPPER_H 

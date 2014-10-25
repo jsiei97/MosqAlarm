@@ -1,14 +1,13 @@
 
 #include <QDebug>
-
+#include <QMutex>
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QStringList>
-#include <QMutex>
 
-#include "UnixTime.h"
 #include "SQLiteWrapper.h"
+#include "UnixTime.h"
 
 
 void SQLiteWrapper::open()
@@ -47,7 +46,8 @@ SQLiteWrapper::SQLiteWrapper()
                     ( \
                       id    INTEGER PRIMARY KEY AUTOINCREMENT, \
                       topic VARCHAR(256), \
-                      time  INTEGER \
+                      time  INTEGER, \
+                      alarm INTEGER DEFAULT 0 \
                     )")
           )
         {
@@ -60,7 +60,6 @@ SQLiteWrapper::SQLiteWrapper()
 
 QString SQLiteWrapper::getId(QString topic)
 {
-    open();
 
     //find id
     unsigned int id = 0;
@@ -69,6 +68,8 @@ QString SQLiteWrapper::getId(QString topic)
     QString str("SELECT id FROM data WHERE topic like '");
     str.append(topic);
     str.append("' LIMIT 1");
+
+    open();
 
     QSqlQuery q(str);
     QSqlRecord rec = q.record();
@@ -84,7 +85,6 @@ QString SQLiteWrapper::getId(QString topic)
         {
             break;
         }
-
         //qDebug() << q.value(nameCol).toString(); // output all names
     }
 
@@ -105,21 +105,18 @@ QString SQLiteWrapper::getId(QString topic)
 
 void SQLiteWrapper::updateTimestamp(QString topic)
 {
-    //qDebug() << UnixTime::get();
-
-    //"select id from data where topic='rum1';"
     QString id = getId(topic);
 
     open();
+
     if(id == NULL)
     {
-
         QString str("INSERT INTO data ( topic, time ) VALUES ('");
         str.append(topic);
         str.append("', '");
         str.append(UnixTime::toQString());
         str.append("')");
-        qDebug() << str;
+        //qDebug() << str;
 
         QSqlQuery query;
         if( !query.exec(str) )
@@ -130,13 +127,15 @@ void SQLiteWrapper::updateTimestamp(QString topic)
     }
     else
     {
-        //update
-        QString str("UPDATE data SET time='");
+        //update:
+        //set current time
+        //reset alarm values
+        QString str("UPDATE data SET alarm=0, time='");
         str.append(UnixTime::toQString());
         str.append("' WHERE id='");
         str.append(id);
         str.append("'");
-        qDebug() << str;
+        //qDebug() << str;
 
         QSqlQuery query;
         if( !query.exec(str) )
@@ -147,4 +146,60 @@ void SQLiteWrapper::updateTimestamp(QString topic)
     }
 
     close();
+}
+
+QStringList SQLiteWrapper::getOldTopics()
+{
+    QStringList list;
+
+    unsigned int alarmLimit = 2*60*60; ///< Data older that Xs will trigger a alarm,
+    unsigned int now  = UnixTime::get();
+    unsigned int past = now-alarmLimit;
+
+    //qDebug() << now;
+    //qDebug() << past;
+
+    QString str("SELECT id, topic FROM data WHERE time < ");
+    {
+        QString strPast;
+        strPast.setNum(past);
+        str.append(strPast);
+    }
+    str.append(" AND alarm=0 ORDER BY topic");
+    //qDebug() << str;
+
+    open();
+
+    QSqlQuery q(str);
+    QSqlRecord rec = q.record();
+
+    //qDebug() << "Number of columns: " << rec.count();
+
+    int colId = rec.indexOf("id"); // index of the field "name"
+    int colTopic = rec.indexOf("topic"); // index of the field "name"
+    while (q.next())
+    {
+        //qDebug() << q.value(colId).toString() << q.value(colTopic).toString();
+        qDebug() << "Alarm data is old:" << alarmLimit << q.value(colTopic).toString();
+
+        //id -> update alarm=1
+        //topic -> list -> return
+
+        QString str2("UPDATE data SET alarm=1 WHERE id='");
+        str2.append(q.value(colId).toString());
+        str2.append("'");
+        //qDebug() << str2;
+
+        QSqlQuery query;
+        if( !query.exec(str2) )
+        {
+            qDebug() << "Error" << str2;
+            qFatal("Failed to update");
+        }
+        list << q.value(colTopic).toString();
+    }
+
+    close();
+
+    return list;
 }

@@ -22,3 +22,8 @@ cj@frog:~/funtech/MosqSanityCheck$ sqlite3 test.db "SELECT * FROM data WHERE tim
 
 now-Xs=past
 
+# Timestamp 240 seconds ago
+expr $(date +%s) - 240
+# Select data older than...
+sqlite3 test.db "SELECT * FROM data WHERE time < $( expr $(date +%s) - 240 );"
+

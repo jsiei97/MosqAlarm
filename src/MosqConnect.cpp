@@ -29,6 +29,7 @@
 #include <QRegExp>
 #include <QDateTime>
 #include <QUrl>
+#include <QRegExp>
 
 #include <mosquittopp.h>
 
@@ -87,12 +88,27 @@ void MosqConnect::on_message(const struct mosquitto_message *message)
         << (QDateTime::currentDateTime()).toString("hh:mm:ss") 
         << UnixTime::get();
 
-    dblite->updateTimestamp(topic);
+
+    QRegExp rxAlarm("Alarm: MosqAlarm:");
+    if (rxAlarm.indexIn(mess) != -1)
+    {
+        qDebug() << "Ignoring my own alarm" << mess;
+    }
+    else
+    {
+        dblite->updateTimestamp(topic);
+    }
 
 }
 
 void MosqConnect::on_subscribe(int mid, int qos_count, const int *granted_qos)
 {
     printf("Subscription succeeded. mid=%d qos=%d granter_qos=%d\n", mid, qos_count, *granted_qos);
+}
+
+
+void MosqConnect::pub(QString topic, QString subject)
+{
+    publish(NULL, topic.toAscii(), subject.size(), subject.toAscii());
 }
 

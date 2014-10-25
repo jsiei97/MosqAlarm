@@ -1,11 +1,14 @@
+#include <unistd.h>
 
 #include <QDebug>
+#include <QStringList>
+
 #include "SQLiteWrapper.h"
 #include "MosqConnect.h"
 
 int main()
 {
-    qDebug() << "Qt SQLite test app";
+    qDebug() << "MQTT old data check app";
     SQLiteWrapper lite;
 
     class MosqConnect *mqtt;
@@ -26,6 +29,13 @@ int main()
         if(rc)
         {
             mqtt->reconnect();
+        }
+
+        QStringList list = lite.getOldTopics();
+        for (int i = 0; i < list.size(); ++i)
+        {
+            //qDebug() << list.at(i);
+            mqtt->pub(list.at(i), "Alarm: MosqAlarm: No new data");
         }
     }
     mosqpp::lib_cleanup();
