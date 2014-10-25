@@ -2,12 +2,14 @@
 #define  __SQLITEWRAPPER_H
 
 #include <QSqlDatabase>
+#include <QMutex>
 
 class SQLiteWrapper
 {
     private:
         QString filename;
         QSqlDatabase db;
+        QMutex mutex;
 
         void open();
         void close();

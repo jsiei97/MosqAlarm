@@ -5,6 +5,7 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QStringList>
+#include <QMutex>
 
 #include "UnixTime.h"
 #include "SQLiteWrapper.h"
@@ -12,6 +13,7 @@
 
 void SQLiteWrapper::open()
 {
+    mutex.lock();
     //Please note that if there is no file, it will be created!
     if( !db.open() )
     {
@@ -22,6 +24,7 @@ void SQLiteWrapper::open()
 void SQLiteWrapper::close()
 {
     db.close();
+    mutex.unlock();
 }
 
 SQLiteWrapper::SQLiteWrapper()
