@@ -48,6 +48,10 @@ MosqConnect::MosqConnect(const char *id, const char *host, int port, SQLiteWrapp
     dblite=db;
 };
 
+MosqConnect::~MosqConnect()
+{
+}
+
 void MosqConnect::on_connect(int rc)
 {
     printf("Connected with code %d.\n", rc);
