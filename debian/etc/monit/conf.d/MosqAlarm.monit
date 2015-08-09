@@ -1,0 +1,4 @@
+check process MosqAlarm with pidfile /var/run/MosqAlarm.pid
+	start = "/etc/init.d/MosqAlarm start"
+	stop = "/etc/init.d/MosqAlarm stop"
+

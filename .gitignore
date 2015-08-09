@@ -1,6 +1,17 @@
+# Project files
+MosqAlarm
+test.db
+
+# Ignore the SQLite file
+MosqAlarm.db
+
 # Buildfiles
 *.o
 *.moc
+*.swp
+
+# Debian install files
+*.deb
 
 # Autogen
 Makefile
@@ -9,7 +20,3 @@ Makefile
 tags
 cscope.files
 cscope.out
-
-# Project files
-MosqAlarm
-test.db
