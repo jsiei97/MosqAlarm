@@ -65,13 +65,14 @@ QString SQLiteWrapper::getId(QString topic)
     unsigned int id = 0;
     bool ok = false;
 
-    QString str("SELECT id FROM data WHERE topic like '");
-    str.append(topic);
-    str.append("' LIMIT 1");
+    QString str("SELECT id FROM data WHERE topic like ':topic' LIMIT 1");
 
     open();
 
-    QSqlQuery q(str);
+    QSqlQuery q;
+    q.prepare(str);
+    q.bindValue(":topic",topic);
+    q.exec();
     QSqlRecord rec = q.record();
 
     //qDebug() << "Number of columns: " << rec.count();
@@ -153,6 +154,7 @@ QStringList SQLiteWrapper::getOldTopics()
     QStringList list;
 
     unsigned int alarmLimit = 2*60*60; ///< Data older that Xs will trigger a alarm,
+    //DEBUG alarmLimit = 2 ;//DEBUG
     unsigned int now  = UnixTime::get();
     unsigned int past = now-alarmLimit;
 
@@ -160,17 +162,17 @@ QStringList SQLiteWrapper::getOldTopics()
     //qDebug() << past;
 
     QString str("SELECT id, topic FROM data WHERE time < ");
-    {
-        QString strPast;
-        strPast.setNum(past);
-        str.append(strPast);
-    }
-    str.append(" AND alarm=0 ORDER BY topic");
+    str.append(":past AND alarm=0 ORDER BY topic");
+
+    QString strPast;
+    strPast.setNum(past);
     //qDebug() << str;
 
     open();
 
     QSqlQuery q(str);
+    q.bindValue(":past", strPast);
+    q.exec();
     QSqlRecord rec = q.record();
 
     //qDebug() << "Number of columns: " << rec.count();
@@ -185,13 +187,14 @@ QStringList SQLiteWrapper::getOldTopics()
         //id -> update alarm=1
         //topic -> list -> return
 
-        QString str2("UPDATE data SET alarm=1 WHERE id='");
-        str2.append(q.value(colId).toString());
-        str2.append("'");
+        QString str2("UPDATE data SET alarm=1 WHERE id=?");
+
+        
         //qDebug() << str2;
 
-        QSqlQuery query;
-        if( !query.exec(str2) )
+        QSqlQuery query(str2);
+        query.bindValue(0,q.value(colId).toString());
+        if( !query.exec() )
         {
             qDebug() << "Error" << str2;
             qFatal("Failed to update");
