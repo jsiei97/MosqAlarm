@@ -31,6 +31,8 @@
 #include "SQLiteWrapper.h"
 #include "UnixTime.h"
 
+#include "DebugDefines.h"
+
 void SQLiteWrapper::open()
 {
     mutex.lock();
@@ -49,7 +51,7 @@ void SQLiteWrapper::close()
 
 void SQLiteWrapper::init()
 {
-    qDebug() << "SQLite init:" << filename;
+    myOut() << "SQLite init use db:" << filename;
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(filename);
 
@@ -58,7 +60,7 @@ void SQLiteWrapper::init()
     QStringList tableList = db.tables(QSql::Tables);
     if( tableList.size() == 0 )
     {
-        qDebug() << "Warning empty db";
+        myWarn() << "Warning empty db";
 
         QSqlQuery query;
         //mqtt topic, unix timestamp
@@ -93,12 +95,11 @@ SQLiteWrapper::SQLiteWrapper(QString file)
 
 QString SQLiteWrapper::getId(QString topic)
 {
-
     //find id
     unsigned int id = 0;
     bool ok = false;
 
-    QString str("SELECT id FROM data WHERE topic like ':topic' LIMIT 1");
+    QString str("SELECT id FROM data WHERE topic like :topic ORDER BY id DESC LIMIT 1");
 
     open();
 
@@ -108,7 +109,7 @@ QString SQLiteWrapper::getId(QString topic)
     q.exec();
     QSqlRecord rec = q.record();
 
-    //qDebug() << "Number of columns: " << rec.count();
+    //myOut() << "Number of columns: " << rec.count();
 
     int nameCol = rec.indexOf("id"); // index of the field "name"
     //if size==1 ...
@@ -119,7 +120,7 @@ QString SQLiteWrapper::getId(QString topic)
         {
             break;
         }
-        //qDebug() << q.value(nameCol).toString(); // output all names
+        //myOut() << q.value(nameCol).toString();
     }
 
     close();
@@ -129,10 +130,12 @@ QString SQLiteWrapper::getId(QString topic)
         QString idS;
         idS.setNum(id);
         str.append(idS);
+        //myOut() << idS;
         return idS;
     }
     else
     {
+        myWarn() << "No id for topic" << topic;
         return NULL;
     }
 }
@@ -150,12 +153,12 @@ void SQLiteWrapper::updateTimestamp(QString topic)
         str.append("', '");
         str.append(UnixTime::toQString());
         str.append("')");
-        //qDebug() << str;
+        //myOut() << str;
 
         QSqlQuery query;
         if( !query.exec(str) )
         {
-            qDebug() << "Error" << str;
+            myErr() << "Error" << str;
             qFatal("Failed to insert");
         }
     }
@@ -169,12 +172,12 @@ void SQLiteWrapper::updateTimestamp(QString topic)
         str.append("' WHERE id='");
         str.append(id);
         str.append("'");
-        //qDebug() << str;
+        //myOut() << str;
 
         QSqlQuery query;
         if( !query.exec(str) )
         {
-            qDebug() << "Error" << str;
+            myErr() << "Error" << str;
             qFatal("Failed to update");
         }
     }
@@ -187,49 +190,56 @@ QStringList SQLiteWrapper::getOldTopics()
     QStringList list;
 
     unsigned int alarmLimit = 2*60*60; ///< Data older that Xs will trigger a alarm,
-    //DEBUG alarmLimit = 2 ;//DEBUG
+
     unsigned int now  = UnixTime::get();
     unsigned int past = now-alarmLimit;
 
-    //qDebug() << now;
-    //qDebug() << past;
+    //myOut() << now;
+    //myOut() << past;
 
-    QString str("SELECT id, topic FROM data WHERE time < ");
-    str.append(":past AND alarm=0 ORDER BY topic");
-
-    QString strPast;
-    strPast.setNum(past);
-    //qDebug() << str;
+    QString str("SELECT id, topic FROM data WHERE time < :past AND alarm=0 ORDER BY topic");
 
     open();
 
-    QSqlQuery q(str);
+    QSqlQuery q;
+    q.prepare(str);
+
+    QString strPast;
+    strPast.setNum(past);
     q.bindValue(":past", strPast);
+
     q.exec();
+    //myOut() << str;
+    //myOut() << q.lastQuery();
+    //myOut() << q.executedQuery();
+
     QSqlRecord rec = q.record();
 
-    //qDebug() << "Number of columns: " << rec.count();
+    //myOut() << "Number of columns: " << rec.count();
 
-    int colId = rec.indexOf("id"); // index of the field "name"
-    int colTopic = rec.indexOf("topic"); // index of the field "name"
+    int colId    = rec.indexOf("id");    // index of the field "id"
+    int colTopic = rec.indexOf("topic"); // index of the field "topic"
     while (q.next())
     {
-        //qDebug() << q.value(colId).toString() << q.value(colTopic).toString();
-        qDebug() << "Alarm data is old:" << alarmLimit << q.value(colTopic).toString();
+        //myOut() << q.value(colId).toString() << q.value(colTopic).toString();
+        myOut() << "Alarm data is old:" << alarmLimit << q.value(colTopic).toString();
 
         //id -> update alarm=1
         //topic -> list -> return
 
         QString str2("UPDATE data SET alarm=1 WHERE id=?");
 
+        QSqlQuery query;
+        query.prepare(str2);
+        query.bindValue(0, q.value(colId).toString());
 
-        //qDebug() << str2;
+        //myOut() << str2;
+        //myOut() << query.lastQuery();
+        //myOut() << query.executedQuery();
 
-        QSqlQuery query(str2);
-        query.bindValue(0,q.value(colId).toString());
         if( !query.exec() )
         {
-            qDebug() << "Error" << str2;
+            myErr() << "Error" << str2;
             qFatal("Failed to update");
         }
         list << q.value(colTopic).toString();
