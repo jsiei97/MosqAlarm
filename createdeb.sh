@@ -43,13 +43,14 @@ EOF
 echo "  git log: "$(git log --oneline | head -n1) >> $control
 
 qmake   || exit 20
-make -j || exit 22
+make || exit 22
 #copy skeleton
 
 (cd debian/; tar c . )|(cd $NAME ; tar x)
 
 install -d $NAME/usr/sbin || exit 30
 cp $APP $NAME/usr/sbin/   || exit 32
+mkdir -p $NAME/var/db/
 
 # And the create the package
 popd
